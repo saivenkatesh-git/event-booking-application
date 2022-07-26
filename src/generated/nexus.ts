@@ -28,9 +28,20 @@ declare global {
 }
 
 export interface NexusGenInputs {
+  EventCreateInput: { // input type
+    creator: string; // String!
+    date: string; // String!
+    description: string; // String!
+    imageUrl?: string | null; // String
+    places: string; // String!
+    price: number; // Int!
+    tickets: number; // Int!
+    title: string; // String!
+  }
   UserCreateInput: { // input type
-    company: string; // String!
+    company?: string | null; // String
     email: string; // String!
+    event?: NexusGenInputs['EventCreateInput'][] | null; // [EventCreateInput!]
     name?: string | null; // String
     password: string; // String!
     role: string; // String!
@@ -54,7 +65,7 @@ export interface NexusGenObjects {
     date: string; // String!
     description: string; // String!
     id: number; // Int!
-    imageUrl: string; // String!
+    imageUrl?: string | null; // String
     places: string; // String!
     price: number; // Int!
     tickets: number; // Int!
@@ -84,11 +95,11 @@ export type NexusGenAllTypes = NexusGenRootTypes & NexusGenScalars
 
 export interface NexusGenFieldTypes {
   Event: { // field return type
-    creator: NexusGenRootTypes['User'][]; // [User!]!
+    creator: NexusGenRootTypes['User'] | null; // User
     date: string; // String!
     description: string; // String!
     id: number; // Int!
-    imageUrl: string; // String!
+    imageUrl: string | null; // String
     places: string; // String!
     price: number; // Int!
     tickets: number; // Int!
@@ -96,6 +107,7 @@ export interface NexusGenFieldTypes {
     user: NexusGenRootTypes['User'][]; // [User!]!
   }
   Mutation: { // field return type
+    createEvent: NexusGenRootTypes['Event']; // Event!
     createUser: NexusGenRootTypes['User']; // User!
   }
   Query: { // field return type
@@ -127,6 +139,7 @@ export interface NexusGenFieldTypeNames {
     user: 'User'
   }
   Mutation: { // field return type name
+    createEvent: 'Event'
     createUser: 'User'
   }
   Query: { // field return type name
@@ -146,6 +159,10 @@ export interface NexusGenFieldTypeNames {
 
 export interface NexusGenArgTypes {
   Mutation: {
+    createEvent: { // args
+      creatorEmail: string; // String!
+      data: NexusGenInputs['EventCreateInput']; // EventCreateInput!
+    }
     createUser: { // args
       data: NexusGenInputs['UserCreateInput']; // UserCreateInput!
     }

@@ -18,7 +18,7 @@ model User {
   password  String
   company  String?
   role      String @default("USER")
-  createdEvents    Event[] @relation("CreatorEvent")
+  createdEvents    Event[] 
   bookedEvents    Event[] @relation("BookerEvent")
 }
 
@@ -27,12 +27,13 @@ model Event {
   title     String
   description String
   price     Int
-  imageUrl  String
-  date      DateTime
+  imageUrl  String?
+  date      String
   places    String
   tickets   Int
   createdAt DateTime @default(now())
-  creator User[] @relation("CreatorEvent")
+  creator User?    @relation(fields: [creatorId], references: [id])
+  creatorId  Int? 
   users  User[]  @relation("BookerEvent")
 }
 

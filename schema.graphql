@@ -8,11 +8,11 @@ A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `dat
 scalar DateTime
 
 type Event {
-  creator: [User!]!
+  creator: User
   date: String!
   description: String!
   id: Int!
-  imageUrl: String!
+  imageUrl: String
   places: String!
   price: Int!
   tickets: Int!
@@ -20,7 +20,19 @@ type Event {
   user: [User!]!
 }
 
+input EventCreateInput {
+  creator: String!
+  date: String!
+  description: String!
+  imageUrl: String
+  places: String!
+  price: Int!
+  tickets: Int!
+  title: String!
+}
+
 type Mutation {
+  createEvent(creatorEmail: String!, data: EventCreateInput!): Event!
   createUser(data: UserCreateInput!): User!
 }
 
@@ -40,8 +52,9 @@ type User {
 }
 
 input UserCreateInput {
-  company: String!
+  company: String
   email: String!
+  event: [EventCreateInput!]
   name: String
   password: String!
   role: String!
