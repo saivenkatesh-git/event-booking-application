@@ -38,3 +38,9 @@ model Event {
 }
 
 
+model Account {
+  id        Int    @id @default(autoincrement())
+  token String
+  message String
+}
+

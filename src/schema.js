@@ -8,11 +8,13 @@ const {
     arg,
     asNexusMethod,
     enumType,
+    nullable,
 } = require('nexus')
 
 const { DateTimeResolver } = require('graphql-scalars')
-
+const jwt = require("jsonwebtoken")
 const DateTime = asNexusMethod(DateTimeResolver, 'date')
+const JWT_SECRET = "asdfasdfasdfasdf"
 
 
 // mutation
@@ -58,6 +60,76 @@ const Mutation = objectType({
                 return user
             }
         })
+
+
+
+        t.nullable.field('login', {
+            type: 'LoginData',
+            args: {
+                data: nullable(
+                    arg({
+                        type: "UserLoginInput"
+                    }),
+                ),
+            },
+            resolve: async (_, args, ctx) => {
+
+                const { data } = args
+                // const user = await ctx.prisma.user({ email: args.email })
+                const user = await ctx.prisma.user.findUnique({
+                    where: {
+                        email: args.data.email,
+                    },
+                })
+                // console.log("user: ", user)
+                if (!user) {
+                    throw new Error("No such user found")
+                }
+                const valid = args.data.password === user.password
+                if (!valid) {
+                    throw new Error("Invalid password")
+                }
+
+                const payload = {
+                    userId: user.id,
+                    email: user.email
+                }
+                let result
+                // let account
+                let token
+                const genToken = () => {
+                    token = jwt.sign(
+                        payload,
+                        JWT_SECRET,
+                        {
+                            expiresIn: 31556926, // 1 year in seconds
+                        },
+
+                    );
+                }
+                genToken()
+                const account = ctx.prisma.account.create({
+                    data: {
+                        token: token,
+                        message: token?"success":"error"
+                    }
+                })
+               return account
+               
+                   
+                
+
+
+            }
+        })
+        t.nonNull.field("logout", {
+            type: "User",
+            resolve: async (_, args, context) => {
+                context.response.clearCookie("token")
+                return { message: "logged out successfully̥" }
+            }
+        })
+
         t.nonNull.field("createEvent", {
             type: "Event",
             args: {
@@ -94,7 +166,7 @@ const Mutation = objectType({
                 if (!isCreator) {
                     console.log("not creator")
                     //  throw new Error('You are not authorized to create an event')
-                     return null
+                    return null
                 }
                 else return context.prisma.event.create({
                     data: {
@@ -117,6 +189,8 @@ const Mutation = objectType({
     }
 }
 )
+
+
 
 //  object types
 const User = objectType({
@@ -180,6 +254,15 @@ const Event = objectType({
     }
 })
 
+const LoginData = objectType({
+    name: "LoginData",
+    definition(t) {
+        t.nullable.string("token")
+        t.nullable.string("message")
+
+    }
+})
+
 // functionality
 const UserCreateInput = inputObjectType({
     name: 'UserCreateInput',
@@ -208,6 +291,14 @@ const EventCreateInput = inputObjectType({
 }
 )
 
+const UserLoginInput = inputObjectType({
+    name: "UserLoginInput",
+    definition(t) {
+        t.nonNull.string("email")
+        t.nonNull.string("password")
+    }
+})
+
 
 // make schema
 const schema = makeSchema({
@@ -215,9 +306,11 @@ const schema = makeSchema({
         Mutation,
         User,
         Event,
+        LoginData,
         UserCreateInput,
         EventCreateInput,
         DateTime,
+        UserLoginInput
     ],
     outputs: {
         schema: __dirname + '/../schema.graphql',

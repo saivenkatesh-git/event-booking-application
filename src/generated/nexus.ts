@@ -46,6 +46,10 @@ export interface NexusGenInputs {
     password: string; // String!
     role: string; // String!
   }
+  UserLoginInput: { // input type
+    email: string; // String!
+    password: string; // String!
+  }
 }
 
 export interface NexusGenEnums {
@@ -70,6 +74,10 @@ export interface NexusGenObjects {
     price: number; // Int!
     tickets: number; // Int!
     title: string; // String!
+  }
+  LoginData: { // root type
+    message?: string | null; // String
+    token?: string | null; // String
   }
   Mutation: {};
   Query: {};
@@ -106,9 +114,15 @@ export interface NexusGenFieldTypes {
     title: string; // String!
     user: NexusGenRootTypes['User'][]; // [User!]!
   }
+  LoginData: { // field return type
+    message: string | null; // String
+    token: string | null; // String
+  }
   Mutation: { // field return type
     createEvent: NexusGenRootTypes['Event']; // Event!
     createUser: NexusGenRootTypes['User']; // User!
+    login: NexusGenRootTypes['LoginData'] | null; // LoginData
+    logout: NexusGenRootTypes['User']; // User!
   }
   Query: { // field return type
     ok: boolean; // Boolean!
@@ -138,9 +152,15 @@ export interface NexusGenFieldTypeNames {
     title: 'String'
     user: 'User'
   }
+  LoginData: { // field return type name
+    message: 'String'
+    token: 'String'
+  }
   Mutation: { // field return type name
     createEvent: 'Event'
     createUser: 'User'
+    login: 'LoginData'
+    logout: 'User'
   }
   Query: { // field return type name
     ok: 'Boolean'
@@ -165,6 +185,9 @@ export interface NexusGenArgTypes {
     }
     createUser: { // args
       data: NexusGenInputs['UserCreateInput']; // UserCreateInput!
+    }
+    login: { // args
+      data?: NexusGenInputs['UserLoginInput'] | null; // UserLoginInput
     }
   }
 }

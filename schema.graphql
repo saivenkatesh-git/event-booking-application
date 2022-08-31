@@ -31,9 +31,16 @@ input EventCreateInput {
   title: String!
 }
 
+type LoginData {
+  message: String
+  token: String
+}
+
 type Mutation {
   createEvent(creatorEmail: String!, data: EventCreateInput!): Event!
   createUser(data: UserCreateInput!): User!
+  login(data: UserLoginInput): LoginData
+  logout: User!
 }
 
 type Query {
@@ -58,4 +65,9 @@ input UserCreateInput {
   name: String
   password: String!
   role: String!
+}
+
+input UserLoginInput {
+  email: String!
+  password: String!
 }
