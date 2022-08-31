@@ -115,11 +115,7 @@ const Mutation = objectType({
                     }
                 })
                return account
-               
-                   
-                
-
-
+         
             }
         })
         t.nonNull.field("logout", {
