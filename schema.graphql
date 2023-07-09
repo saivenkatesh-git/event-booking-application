@@ -9,14 +9,14 @@ scalar DateTime
 
 type Event {
   creator: User
-  date: String!
-  description: String!
-  id: Int!
+  date: String
+  description: String
+  id: Int
   imageUrl: String
-  places: String!
-  price: Int!
-  tickets: Int!
-  title: String!
+  places: String
+  price: Int
+  tickets: Int
+  title: String
   user: [User!]!
 }
 
@@ -37,14 +37,14 @@ type LoginData {
 }
 
 type Mutation {
-  createEvent(creatorEmail: String!, data: EventCreateInput!): Event!
+  createEvent(data: EventCreateInput!): Event
   createUser(data: UserCreateInput!): User!
   login(data: UserLoginInput): LoginData
   logout: User!
 }
 
 type Query {
-  ok: Boolean!
+  allEvents: Event
 }
 
 type User {
@@ -61,7 +61,7 @@ type User {
 input UserCreateInput {
   company: String
   email: String!
-  event: [EventCreateInput!]
+  event: EventCreateInput!
   name: String
   password: String!
   role: String!

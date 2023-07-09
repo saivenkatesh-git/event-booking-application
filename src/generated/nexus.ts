@@ -4,6 +4,7 @@
  */
 
 
+import type {  } from "./../context.js"
 import type { core } from "nexus"
 declare global {
   interface NexusGenCustomInputMethods<TypeName extends string> {
@@ -41,7 +42,7 @@ export interface NexusGenInputs {
   UserCreateInput: { // input type
     company?: string | null; // String
     email: string; // String!
-    event?: NexusGenInputs['EventCreateInput'][] | null; // [EventCreateInput!]
+    event: NexusGenInputs['EventCreateInput']; // EventCreateInput!
     name?: string | null; // String
     password: string; // String!
     role: string; // String!
@@ -66,14 +67,14 @@ export interface NexusGenScalars {
 
 export interface NexusGenObjects {
   Event: { // root type
-    date: string; // String!
-    description: string; // String!
-    id: number; // Int!
+    date?: string | null; // String
+    description?: string | null; // String
+    id?: number | null; // Int
     imageUrl?: string | null; // String
-    places: string; // String!
-    price: number; // Int!
-    tickets: number; // Int!
-    title: string; // String!
+    places?: string | null; // String
+    price?: number | null; // Int
+    tickets?: number | null; // Int
+    title?: string | null; // String
   }
   LoginData: { // root type
     message?: string | null; // String
@@ -104,14 +105,14 @@ export type NexusGenAllTypes = NexusGenRootTypes & NexusGenScalars
 export interface NexusGenFieldTypes {
   Event: { // field return type
     creator: NexusGenRootTypes['User'] | null; // User
-    date: string; // String!
-    description: string; // String!
-    id: number; // Int!
+    date: string | null; // String
+    description: string | null; // String
+    id: number | null; // Int
     imageUrl: string | null; // String
-    places: string; // String!
-    price: number; // Int!
-    tickets: number; // Int!
-    title: string; // String!
+    places: string | null; // String
+    price: number | null; // Int
+    tickets: number | null; // Int
+    title: string | null; // String
     user: NexusGenRootTypes['User'][]; // [User!]!
   }
   LoginData: { // field return type
@@ -119,13 +120,13 @@ export interface NexusGenFieldTypes {
     token: string | null; // String
   }
   Mutation: { // field return type
-    createEvent: NexusGenRootTypes['Event']; // Event!
+    createEvent: NexusGenRootTypes['Event'] | null; // Event
     createUser: NexusGenRootTypes['User']; // User!
     login: NexusGenRootTypes['LoginData'] | null; // LoginData
     logout: NexusGenRootTypes['User']; // User!
   }
   Query: { // field return type
-    ok: boolean; // Boolean!
+    allEvents: NexusGenRootTypes['Event'] | null; // Event
   }
   User: { // field return type
     bookedEvents: NexusGenRootTypes['Event'][]; // [Event!]!
@@ -163,7 +164,7 @@ export interface NexusGenFieldTypeNames {
     logout: 'User'
   }
   Query: { // field return type name
-    ok: 'Boolean'
+    allEvents: 'Event'
   }
   User: { // field return type name
     bookedEvents: 'Event'
@@ -180,7 +181,6 @@ export interface NexusGenFieldTypeNames {
 export interface NexusGenArgTypes {
   Mutation: {
     createEvent: { // args
-      creatorEmail: string; // String!
       data: NexusGenInputs['EventCreateInput']; // EventCreateInput!
     }
     createUser: { // args

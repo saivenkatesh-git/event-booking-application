@@ -20,6 +20,7 @@ model User {
   role      String @default("USER")
   createdEvents    Event[] 
   bookedEvents    Event[] @relation("BookerEvent")
+  loginHistory Account[] 
 }
 
 model Event {
@@ -42,5 +43,8 @@ model Account {
   id        Int    @id @default(autoincrement())
   token String
   message String
+    createdAt DateTime @default(now())
+  user User?    @relation(fields: [userId], references: [id])
+  userId  Int? 
 }
 

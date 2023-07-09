@@ -1,3 +1,4 @@
+const { PrismaClient } = require('@prisma/client')
 const {
     intArg,
     makeSchema,
@@ -14,13 +15,15 @@ const {
 const { DateTimeResolver } = require('graphql-scalars')
 const jwt = require("jsonwebtoken")
 const DateTime = asNexusMethod(DateTimeResolver, 'date')
-const JWT_SECRET = "asdfasdfasdfasdf"
+const JWT_SECRET = process.env.JWT_SECRET
 
 
 // mutation
 const Mutation = objectType({
     name: 'Mutation',
     definition(t) {
+
+        // create user
         t.nonNull.field('createUser', {
             type: 'User',
             args: {
@@ -61,8 +64,7 @@ const Mutation = objectType({
             }
         })
 
-
-
+        // login 
         t.nullable.field('login', {
             type: 'LoginData',
             args: {
@@ -111,13 +113,15 @@ const Mutation = objectType({
                 const account = ctx.prisma.account.create({
                     data: {
                         token: token,
-                        message: token?"success":"error"
+                        message: token ? "success" : "error"
                     }
                 })
-               return account
-         
+                return account
+
             }
         })
+
+        // logout
         t.nonNull.field("logout", {
             type: "User",
             resolve: async (_, args, context) => {
@@ -126,58 +130,79 @@ const Mutation = objectType({
             }
         })
 
-        t.nonNull.field("createEvent", {
+        // create event
+        t.nullable.field("createEvent", {
             type: "Event",
+
             args: {
-                data: nonNull(
-                    arg({
-                        type: "EventCreateInput",
-                    }),
+                data: nonNull(arg({
+                    type: "EventCreateInput",
+                }),
                 ),
-                creatorEmail: nonNull(stringArg({})),
             },
             resolve: async (_, args, context) => {
                 const { data } = args
+                let userEmail
+                let user
                 try {
-                    isCreator = await context.prisma.user && context.prisma.user.findUnique(
 
-                        {
-                            email: args.creatorEmail,
-                            role: "ADMIN"
+
+                    const headers = context.headers;
+                    // Fetch the token from the headers
+                    const token = headers.authorization?.replace('jwt', '');
+
+                    // Verify the token and extract the user email
+                    const decodedToken = jwt.verify(token, JWT_SECRET);
+                    userEmail = decodedToken.email;
+
+                    user = await context.prisma.user.findUnique({
+                        where: {
+                            email: userEmail, // Assuming you have the user email available
+                          },
+                    })
+                    if (user && user.role === "ADMIN") {
+                        // const email = user.email;
+                        // const role = user.role;
+                        console.log(user)
+                        return context.prisma.event.create({
+                            data: {
+                                title: data.title,
+                                description: data.description,
+                                imageUrl: data.imageUrl,
+                                date: data.date,
+                                places: data.places,
+                                price: data.price,
+                                tickets: data.tickets,
+                                creator: {
+                                    connect: { email: userEmail },
+                                },
+                            }
                         })
+                    } else {
+                        console.log("not creator")
+                        //  throw new Error('You are not authorized to create an event')
+                        return null
+    
+                    }
+
                 } catch (e) {
-                    // if (e instanceof Prisma.PrismaClientKnownRequestError) {
-                    //     // The .code property can be accessed in a type-safe manner
-                    //     if (e.code === 'P2002') {
-                    //         console.log(
-                    //             'You are not authorized to create an event'
-                    //         )
-                    //     }
-                    // }
+                    console.log(e)
+                    if (e instanceof Prisma.PrismaClientKnownRequestError) {
+                        // The .code property can be accessed in a type-safe manner
+                        if (e.code === 'P2002') {
+                            console.log(
+                                'You are not authorized to create an event'
+                            )
+                        }
+                    }
                     throw e
                     const error = prismaCustomErrorHandler(e);
                     return error
                 }
 
-                if (!isCreator) {
-                    console.log("not creator")
-                    //  throw new Error('You are not authorized to create an event')
-                    return null
-                }
-                else return context.prisma.event.create({
-                    data: {
-                        title: data.title,
-                        description: data.description,
-                        imageUrl: data.imageUrl,
-                        date: data.date,
-                        places: data.places,
-                        price: data.price,
-                        tickets: data.tickets,
-                        creator: {
-                            connect: { email: args.creatorEmail },
-                        },
-                    }
-                })
+                
+
+
 
 
             }
@@ -185,6 +210,32 @@ const Mutation = objectType({
     }
 }
 )
+
+const Query = objectType({
+    name: "Query",
+    definition(t) {
+        t.nullable.field("allEvents", {
+            type: "Event",
+            // resolve:async(_, args,ctx)=>{
+            //     const allEvents = await ctx.prisma.event.findMany()
+            //     console.log(allEvents)
+            //     return allEvents
+            // }
+            resolve: test = async function (_, args, ctx) {
+                console.log("test")
+                const allEvents = await ctx.prisma.event.findMany()
+                try {
+                    console.log(allEvents)
+                    return allEvents
+                } catch (e) {
+
+                    test()
+                }
+
+            }
+        })
+    }
+})
 
 
 
@@ -220,14 +271,14 @@ const User = objectType({
 const Event = objectType({
     name: 'Event',
     definition(t) {
-        t.nonNull.int('id')
-        t.nonNull.string('title')
-        t.nonNull.string('description')
-        t.nullable.string('imageUrl')
-        t.nonNull.string('date')
-        t.nonNull.string('places')
-        t.nonNull.int('price')
-        t.nonNull.int('tickets')
+        t.int('id')
+        t.string('title')
+        t.string('description')
+        t.string('imageUrl')
+        t.string('date')
+        t.string('places')
+        t.int('price')
+        t.int('tickets')
         t.field('creator', {
             type: 'User',
             resolve: (parent, _, context) => {
@@ -268,7 +319,7 @@ const UserCreateInput = inputObjectType({
         t.nonNull.string('password')
         t.nonNull.string('role')
         t.string('company')
-        t.list.nonNull.field('event', { type: 'EventCreateInput' })
+        t.nonNull.field('event', { type: 'EventCreateInput' })
     },
 })
 
@@ -294,12 +345,13 @@ const UserLoginInput = inputObjectType({
         t.nonNull.string("password")
     }
 })
-
+const prisma = new PrismaClient()
 
 // make schema
 const schema = makeSchema({
     types: [
         Mutation,
+        Query,
         User,
         Event,
         LoginData,
@@ -311,6 +363,10 @@ const schema = makeSchema({
     outputs: {
         schema: __dirname + '/../schema.graphql',
         typegen: __dirname + '/generated/nexus.ts',
+    },
+    contextType: {
+        module: require.resolve('./context'),
+        context: "Context"
     },
     sourceTypes: {
         modules: [

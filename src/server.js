@@ -1,10 +1,16 @@
 const { ApolloServer } = require('apollo-server')
 const { schema } = require('./schema')
 const { context } = require('./context')
+const { PrismaClient } = require('@prisma/client')
+
+const prisma = new PrismaClient()
 
 const server = new ApolloServer({
   schema: schema,
-  context: context,
+  context:({ req }) => ({
+    headers: req.headers, // Pass the request headers to the context
+    prisma:prisma, // Pass the Prisma Client instance to the context
+  }),
 })
 
 server.listen().then(async ({ url }) => {
