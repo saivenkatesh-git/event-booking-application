@@ -39,6 +39,9 @@ export interface NexusGenInputs {
     tickets: number; // Int!
     title: string; // String!
   }
+  EventDeleteInput: { // input type
+    id: string; // String!
+  }
   UserCreateInput: { // input type
     company?: string | null; // String
     email: string; // String!
@@ -66,6 +69,19 @@ export interface NexusGenScalars {
 }
 
 export interface NexusGenObjects {
+  AllEvent: { // root type
+    date?: string | null; // String
+    description?: string | null; // String
+    id?: number | null; // Int
+    imageUrl?: string | null; // String
+    places?: string | null; // String
+    price?: number | null; // Int
+    tickets?: number | null; // Int
+    title?: string | null; // String
+  }
+  DeleteEvent: { // root type
+    message?: string | null; // String
+  }
   Event: { // root type
     date?: string | null; // String
     description?: string | null; // String
@@ -103,6 +119,20 @@ export type NexusGenRootTypes = NexusGenObjects
 export type NexusGenAllTypes = NexusGenRootTypes & NexusGenScalars
 
 export interface NexusGenFieldTypes {
+  AllEvent: { // field return type
+    creator: string | null; // String
+    date: string | null; // String
+    description: string | null; // String
+    id: number | null; // Int
+    imageUrl: string | null; // String
+    places: string | null; // String
+    price: number | null; // Int
+    tickets: number | null; // Int
+    title: string | null; // String
+  }
+  DeleteEvent: { // field return type
+    message: string | null; // String
+  }
   Event: { // field return type
     creator: NexusGenRootTypes['User'] | null; // User
     date: string | null; // String
@@ -113,7 +143,6 @@ export interface NexusGenFieldTypes {
     price: number | null; // Int
     tickets: number | null; // Int
     title: string | null; // String
-    user: NexusGenRootTypes['User'][]; // [User!]!
   }
   LoginData: { // field return type
     message: string | null; // String
@@ -122,11 +151,12 @@ export interface NexusGenFieldTypes {
   Mutation: { // field return type
     createEvent: NexusGenRootTypes['Event'] | null; // Event
     createUser: NexusGenRootTypes['User']; // User!
+    deleteEventMutation: NexusGenRootTypes['DeleteEvent'] | null; // DeleteEvent
     login: NexusGenRootTypes['LoginData'] | null; // LoginData
     logout: NexusGenRootTypes['User']; // User!
   }
   Query: { // field return type
-    allEvents: NexusGenRootTypes['Event'] | null; // Event
+    allEvents: Array<NexusGenRootTypes['AllEvent'] | null> | null; // [AllEvent]
   }
   User: { // field return type
     bookedEvents: NexusGenRootTypes['Event'][]; // [Event!]!
@@ -141,6 +171,20 @@ export interface NexusGenFieldTypes {
 }
 
 export interface NexusGenFieldTypeNames {
+  AllEvent: { // field return type name
+    creator: 'String'
+    date: 'String'
+    description: 'String'
+    id: 'Int'
+    imageUrl: 'String'
+    places: 'String'
+    price: 'Int'
+    tickets: 'Int'
+    title: 'String'
+  }
+  DeleteEvent: { // field return type name
+    message: 'String'
+  }
   Event: { // field return type name
     creator: 'User'
     date: 'String'
@@ -151,7 +195,6 @@ export interface NexusGenFieldTypeNames {
     price: 'Int'
     tickets: 'Int'
     title: 'String'
-    user: 'User'
   }
   LoginData: { // field return type name
     message: 'String'
@@ -160,11 +203,12 @@ export interface NexusGenFieldTypeNames {
   Mutation: { // field return type name
     createEvent: 'Event'
     createUser: 'User'
+    deleteEventMutation: 'DeleteEvent'
     login: 'LoginData'
     logout: 'User'
   }
   Query: { // field return type name
-    allEvents: 'Event'
+    allEvents: 'AllEvent'
   }
   User: { // field return type name
     bookedEvents: 'Event'
@@ -185,6 +229,9 @@ export interface NexusGenArgTypes {
     }
     createUser: { // args
       data: NexusGenInputs['UserCreateInput']; // UserCreateInput!
+    }
+    deleteEventMutation: { // args
+      data: NexusGenInputs['EventDeleteInput']; // EventDeleteInput!
     }
     login: { // args
       data?: NexusGenInputs['UserLoginInput'] | null; // UserLoginInput

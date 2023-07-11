@@ -1,6 +1,6 @@
 const { ApolloServer } = require('apollo-server')
-const { schema } = require('./schema')
-const { context } = require('./context')
+const { schema } = require('./backend/schema')
+const { context } = require('./backend/context')
 const { PrismaClient } = require('@prisma/client')
 
 const prisma = new PrismaClient()

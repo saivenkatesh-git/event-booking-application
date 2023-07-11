@@ -158,7 +158,7 @@ const Mutation = objectType({
                     user = await context.prisma.user.findUnique({
                         where: {
                             email: userEmail, // Assuming you have the user email available
-                          },
+                        },
                     })
                     if (user && user.role === "ADMIN") {
                         // const email = user.email;
@@ -173,16 +173,15 @@ const Mutation = objectType({
                                 places: data.places,
                                 price: data.price,
                                 tickets: data.tickets,
-                                creator: {
-                                    connect: { email: userEmail },
-                                },
+                                creator: { connect: { email: userEmail } },
+
                             }
                         })
                     } else {
                         console.log("not creator")
                         //  throw new Error('You are not authorized to create an event')
                         return null
-    
+
                     }
 
                 } catch (e) {
@@ -199,13 +198,63 @@ const Mutation = objectType({
                     const error = prismaCustomErrorHandler(e);
                     return error
                 }
+            }
+        })
 
-                
+        // delete event
+        t.nullable.field("deleteEventMutation", {
+            type: "DeleteEvent",
+            args: {
+                data: nonNull(arg({
+                    type: "EventDeleteInput",
+                }),
+                ),
+            },
+            resolve: async (_, args, context) => {
+                const { data } = args
+                let userEmailToRemoveEvent
+                let userToRemoveEvent
+                try {
+                    const headers = context.headers;
+                    // Fetch the token from the headers
+                    const token = headers.authorization?.replace('jwt', '');
 
-
-
+                    // Verify the token and extract the user email
+                    const decodedToken = jwt.verify(token, JWT_SECRET);
+                    userEmailToRemoveEvent = decodedToken.email;
+                    console.log(context.prisma.event)
+                    userToRemoveEvent = await context.prisma.event.findFirst({
+                        where: {
+                          id: parseInt(data.id),
+                          creator: {
+                            email: userEmailToRemoveEvent,
+                          },
+                        },
+                      })
+                    if (userToRemoveEvent) {
+                        await context.prisma.event.delete({
+                            where: {
+                              id: userToRemoveEvent.id,
+                            },
+                          });
+                        console.log('can delete')
+                        return {
+                            success: true,
+                            message: 'Event deleted Successfully.',
+                          };
+                    } else {
+                        console.log('cannont delete')
+                        return {
+                            success: false,
+                            message: 'Your unauthorized to delete this event.',
+                          };
+                    }
+                } catch (e) {
+                    console.log(e)
+                }
 
             }
+
         })
     }
 }
@@ -214,26 +263,12 @@ const Mutation = objectType({
 const Query = objectType({
     name: "Query",
     definition(t) {
-        t.nullable.field("allEvents", {
-            type: "Event",
-            // resolve:async(_, args,ctx)=>{
-            //     const allEvents = await ctx.prisma.event.findMany()
-            //     console.log(allEvents)
-            //     return allEvents
-            // }
-            resolve: test = async function (_, args, ctx) {
-                console.log("test")
-                const allEvents = await ctx.prisma.event.findMany()
-                try {
-                    console.log(allEvents)
-                    return allEvents
-                } catch (e) {
-
-                    test()
-                }
-
-            }
-        })
+        t.nullable.list.field('allEvents', {
+            type: 'AllEvent',
+            resolve: (_, __, context) => {
+              return context.prisma.event.findMany();
+            },
+          });
     }
 })
 
@@ -281,23 +316,58 @@ const Event = objectType({
         t.int('tickets')
         t.field('creator', {
             type: 'User',
-            resolve: (parent, _, context) => {
-                return context.prisma.event
-                    .findUnique({
-                        where: { id: parent.id || undefined },
-                    })
-                    .creator()
+            resolve: async (parent, _, context) => {
+                console.log(parent)
+              const event = await context.prisma.event.findUnique({
+                where: { id: parent.id },
+                include: { creator: true },
+              });
+          
+              return event.creator;
             },
-        })
+          });
 
 
+        // t.nonNull.list.nonNull.field('user', {
+        //     type: 'User',
+        //     resolve: (parent, _, context) => {
+        //         return []
+        //     },
+        // })
+    }
+})
 
-        t.nonNull.list.nonNull.field('user', {
-            type: 'User',
-            resolve: (parent, _, context) => {
-                return []
+const AllEvent = objectType({
+    name: 'AllEvent',
+    definition(t) {
+        t.int('id')
+        t.string('title')
+        t.string('description')
+        t.string('imageUrl')
+        t.string('date')
+        t.string('places')
+        t.int('price')
+        t.int('tickets')
+        t.field('creator', {
+            type: 'String',
+            resolve: async (parent, _, context) => {
+                console.log(parent)
+              const event = await context.prisma.event.findUnique({
+                where: { id: parent.id },
+                include: { creator: true },
+              });
+          
+              return event.creator.email;
             },
-        })
+          });
+
+
+        // t.nonNull.list.nonNull.field('user', {
+        //     type: 'User',
+        //     resolve: (parent, _, context) => {
+        //         return []
+        //     },
+        // })
     }
 })
 
@@ -305,6 +375,14 @@ const LoginData = objectType({
     name: "LoginData",
     definition(t) {
         t.nullable.string("token")
+        t.nullable.string("message")
+
+    }
+})
+
+const DeleteEvent = objectType({
+    name: "DeleteEvent",
+    definition(t) {
         t.nullable.string("message")
 
     }
@@ -338,6 +416,13 @@ const EventCreateInput = inputObjectType({
 }
 )
 
+const EventDeleteInput = inputObjectType({
+    name: 'EventDeleteInput',
+    definition(t) {
+        t.nonNull.string('id')
+    }
+})
+
 const UserLoginInput = inputObjectType({
     name: "UserLoginInput",
     definition(t) {
@@ -354,9 +439,12 @@ const schema = makeSchema({
         Query,
         User,
         Event,
+        AllEvent,
+        DeleteEvent,
         LoginData,
         UserCreateInput,
         EventCreateInput,
+        EventDeleteInput,
         DateTime,
         UserLoginInput
     ],
